@@ -1,3 +1,8 @@
+@font-face {
+    font-family: Oswald;
+    src: url(Oswald-VariableFont_wght.ttf);
+}
+
 html, body {
     width: 100vw;
     height: 100vh;
@@ -5,11 +10,13 @@ html, body {
     margin: 0;
     background-color: black;
     color: white;
-    font-family: sans-serif;
+    font-family: Oswald, sans-serif;
     overflow: hidden;
 
     display: flex;
     flex-direction: column;
+
+    user-select: none;
 }
 
 #header {
@@ -23,6 +30,7 @@ html, body {
     padding: 4px;
     box-shadow: 0 4px 10px black;
     z-index: 2;
+    border-radius: 0 0 4px 4px;
 }
 
 #main {
@@ -49,9 +57,39 @@ html, body {
     background-color: #222222;
     box-shadow: 0 -4px 10px black;
     z-index: 2;
+    border-radius: 4px 4px 0 0;
 }
 
 .tab-button {
     width: 100%;
     font-size: 40px;
+    background-color: #212121;
+    margin: 8px;
+    padding: 4px;
+    padding-left: 16px;
+    border-radius: 4px;
+    box-shadow: 0 -4px 10px black;
+    transition: 0.2s;
+    font-weight: 100;
+}
+.tab-button:hover {
+    background-color: #3d3d3d;
+    margin-left: 2px;
+    box-shadow: 0 -4px 15px black;
+    padding-left: 4px;
+}
+
+/* Small screens */
+@media only screen and (max-width: 600px) {
+.tab-button {
+    font-size: 22px;
+}
+}
+
+@media only screen and (max-width: 400px) {
+.tab-button {
+    font-size: 14px;
+    padding: 1px;
+    text-align: center;
+}
 }

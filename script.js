@@ -4,7 +4,16 @@ var sidebar = document.getElementById("sidebar")
 var menu = {
     "home": function() {
         console.log("Tab")
-    }
+    },
+    "songs": function() {
+
+    },
+    "albums": function() {
+
+    },
+    "artists": function() {
+
+    },
 }
 
 Object.keys(menu).forEach(tab => {
