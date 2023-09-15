@@ -9,9 +9,10 @@
 
     <body>
 
-         <div id="header"><div>offbeat</div></div>
+         <div id="header"> <img src="logo.png" id="logo"> <div>offbeat</div> <button onclick="loadDirectory()" id="folder-select">Select a Folder</button></div>
 
          <div id="main">
+
              <div id="sidebar">
 
              </div>
@@ -19,8 +20,31 @@
              <div id="bar-view"></div>
          </div>
 
-         <div id="controls"></div>
+         <div id="controls">
 
+            <div id="curently-playing-thumb">
+             <img id="currently-playing-art">
+             <div id="currently-playing-title"></div>
+            </div>
+
+            <div id="control-container">
+                <div id="control-buttons">
+                    <ion-icon name="play-skip-back-outline"></ion-icon>
+                    <ion-icon name="play-outline"></ion-icon>
+                    <ion-icon name="pause-outline"></ion-icon>
+                    <ion-icon name="play-skip-forward-outline"></ion-icon>
+                </div>
+                <div id="control-seek">
+                    <input type="range" min="0" max="0" id="control-seek-input">
+                </div>
+            </div>
+
+         </div>
+        
+         <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+        <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+         <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+         <script  src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.js"></script>
          <script src="script.js"></script>
 
     </body>
