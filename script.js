@@ -17,10 +17,14 @@ window.addEventListener('click', () => {
 });
 
 // Play local audio file.
-async function playAudio (fileHandle) {
+async function playAudio (fileHandle, imageURL, tags) {
   const file = await fileHandle.getFile();
   const arrayBuffer = await file.arrayBuffer();
   const decodedBuffer = await ctx.decodeAudioData(arrayBuffer);
+
+  document.getElementById("currently-playing-art").src = imageURL;
+  document.getElementById("currently-playing-title").innerText = tags.title;
+
 
   // Create source node
   const source = ctx.createBufferSource();
@@ -135,7 +139,9 @@ async function createSongElement(handle, tags) {
     song.appendChild(title)
     title.innerText = tags.title;
 
-    song.onclick = (event) => {playAudio(handle)};
+    song.onclick = (event) => {
+        playAudio(handle, url, tags)
+    };
 
     return song;
 }

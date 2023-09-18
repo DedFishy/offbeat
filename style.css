@@ -1,6 +1,6 @@
 :root {
     --header-height: 50px;
-    --player-height: 50px;
+    --player-height: 100px;
 
     --sidebar-width: 20vw;
 }
@@ -90,7 +90,7 @@ button {
 
 #controls {
     width: 100vw;
-    height: 50px;
+    height: var(--player-height);
     background-color: #222222;
     box-shadow: 0 -4px 10px black;
     z-index: 2;
@@ -102,10 +102,26 @@ button {
     flex-direction: row;
 }
 #currently-playing-thumb {
-    width: var(--player-height);
-    height: var(--player-height);
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+#currently-playing-art {
+    height: calc(var(--player-height) - 32px);
+    width: calc(var(--player-height) - 32px);
+    border-radius: 4px;
+    box-shadow: 0 4px 16px black;
+    transition: 0.2s;
+}
+#currently-playing-art:hover {
+    transform: scale(1.2);
+    margin-left: 8px;
+}
+#currently-playing-title {
+    width: fit-content;
+    text-align: center;
+    height: fit-content;
+    padding: 2px;
 }
 
 #control-container {
@@ -115,7 +131,25 @@ button {
     flex-direction: column;
 }
 
-#control-see /* FINISH */
+#control-seek {
+    width: 100%;
+}
+#control-seek input {
+    width: 100%;
+}
+
+#control-buttons {
+    flex-grow: 1;
+}
+#control-buttons ion-icon {
+    height: 100%;
+    font-size: 200%;
+    filter: drop-shadow(4px 4px 4px black);
+    transition: 0.2s;
+}
+#control-buttons ion-icon:hover {
+    filter: drop-shadow(4px 4px 8px black);
+}
 
 .tab-button {
     width: 100%;
