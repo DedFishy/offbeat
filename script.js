@@ -1,6 +1,7 @@
 var tabView = document.getElementById("bar-view")
 var sidebar = document.getElementById("sidebar")
 var folderSelect = document.getElementById("folder-select")
+var seeker = document.getElementById("control-seek-input");
 var jsmediatags = window.jsmediatags;
 // Create audio context.
 const ctx = new window.AudioContext();
@@ -16,8 +17,41 @@ window.addEventListener('click', () => {
   passive: true,
 });
 
+var source = null;
+
+var ctxTimeOffset = 0;
+
+var ignoreEnd = false;
+
+seeker.oninput = function(event) {
+    value = seeker.value;
+    newSource = ctx.createBufferSource();
+    newSource.buffer = source.buffer;
+    newSource.connect(ctx.destination);
+    ignoreEnd = true;
+    source.stop()
+    source = newSource
+    source.start(0, value / 100); 
+    source.onended = function(event) {
+      console.log("ended");
+      console.log(ignoreEnd)
+      if (ignoreEnd) {
+        ignoreEnd = false;
+        return;
+    }
+      console.log("Not ignored");
+
+      ctxTimeOffset = false;
+    }
+    ctxTimeOffset = ctx.currentTime - value/100;
+};
+
 // Play local audio file.
 async function playAudio (fileHandle, imageURL, tags) {
+  if (source) {
+      source.stop();
+  }
+  playButton()
   const file = await fileHandle.getFile();
   const arrayBuffer = await file.arrayBuffer();
   const decodedBuffer = await ctx.decodeAudioData(arrayBuffer);
@@ -27,10 +61,52 @@ async function playAudio (fileHandle, imageURL, tags) {
 
 
   // Create source node
-  const source = ctx.createBufferSource();
+  source = ctx.createBufferSource();
   source.buffer = decodedBuffer;
   source.connect(ctx.destination);
-  source.start(); 
+  source.start(0); 
+  source.onended = function(event) {
+      console.log("end");
+      console.log(event)
+      if (ignoreEnd) {
+        ignoreEnd = false;
+        return;
+    }
+      ctxTimeOffset = false;
+  }
+  ctxTimeOffset = ctx.currentTime;
+}
+
+function playButton() {
+    ctx.resume()
+    seeker.disabled = false;
+}
+function pauseButton() {
+    ctx.suspend()
+    seeker.disabled = true;
+}
+
+function getPlayingTime() {
+    if (!source) {
+        return 0;
+    }
+    if (!ctxTimeOffset) {
+        return getPlayingLength();
+    }
+    return ctx.currentTime - ctxTimeOffset;
+}
+function getPlayingLength() {
+    if (source) {
+        return source.buffer.duration;
+    }
+    return 0;
+}
+
+function updateSeekBar() {
+    let playingTime = Math.trunc(getPlayingTime() * 100)
+    let playingLength = Math.trunc(getPlayingLength() * 100)
+    seeker.max = playingLength;
+    seeker.value = playingTime;
 }
 
 var directory;
@@ -43,14 +119,7 @@ db.version(1).stores({
 
 var handles = [];
 
-var songs = {
-    "Unknown Album": [
-        [
-            "Long Long Journey",
-            "Bill Wurtz"
-        ]
-    ]
-}
+var songs = {}
 
 var menu = [
     "home",
@@ -150,10 +219,18 @@ async function loadAudioMeta(handle) {
     jsmediatags.read(await handle.getFile(), {onSuccess: async function(tag) {
         tags = tag.tags;
         console.log(tags);
-        menuItems["home"].appendChild(
+        menuItems["songs"].appendChild(
             await createSongElement(handle, tags)
             );
 
+    },
+    onError: async function(error) {
+        
+        menuItems["songs"].appendChild(
+            await createSongElement(handle, {
+                title: handle.name.split(".")[0]
+            })
+        );
     }});
 }
 
@@ -183,3 +260,5 @@ async function loadDirectory() {
     db.directory.put({name: directory.name, handle: directory});
     loadFolderFiles(directory);
 }
+
+setInterval(updateSeekBar, 500);

@@ -148,7 +148,12 @@ button {
     transition: 0.2s;
 }
 #control-buttons ion-icon:hover {
-    filter: drop-shadow(4px 4px 8px black);
+    transform: scale(1.2);
+}
+
+input[type="range"] {
+    accent-color: black;
+    border: none;
 }
 
 .tab-button {
@@ -176,6 +181,28 @@ button {
     max-height: 100%;
     width: 100%;
     overflow-y: auto;
+    padding-top: 8px;
+}
+.tab-content::-webkit-scrollbar {
+    width: 10px;
+}
+.tab-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.tab-content::-webkit-scrollbar-button {
+    background: transparent;
+    height: 0;
+}
+.tab-content::-webkit-scrollbar-corner {
+    background: transparent;
+}
+.tab-content::-webkit-scrollbar-thumb {
+    background: #222222;
+    border-radius: 4px;
+}
+.tab-content::-webkit-scrollbar-track-piece {
+    background: #111111;
+    border-radius: 4px;
 }
 
 #home {
@@ -187,7 +214,12 @@ button {
     align-items: center;
 }
 #songs {
-    background-color: yellow;
+    background-color: transparent;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
 }
 #albums {
     background-color: green;
