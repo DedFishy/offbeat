@@ -2,6 +2,21 @@ var tabView = document.getElementById("bar-view")
 var sidebar = document.getElementById("sidebar")
 var folderSelect = document.getElementById("folder-select")
 var seeker = document.getElementById("control-seek-input");
+var loader = document.getElementById("loader");
+var loading = document.getElementById("loading");
+
+var progressbar = document.getElementById("progressbar");
+var progressbarInner = document.getElementById("progressbar-inner");
+
+progressbar.style.display = "none";
+
+
+loading.innerText = "loading..."
+
+document.body.onload = function() {
+    loader.style.display = "none";
+}
+
 var jsmediatags = window.jsmediatags;
 // Create audio context.
 const ctx = new window.AudioContext();
@@ -121,8 +136,11 @@ var handles = [];
 
 var songs = {}
 
+var albumElements = {};
+var artistElements = {};
+
+
 var menu = [
-    "home",
     "songs",
     "albums",
     "artists"
@@ -165,6 +183,8 @@ async function reloadFolders() {
 }
 
 async function loadFolderFiles(handle) {
+    loader.style.display = "flex";
+    loading.innerText = "loading music files..."
     const entries = [];
     for await (const entry of handle.values()) {
         if (entry.kind !== 'file') {
@@ -174,11 +194,29 @@ async function loadFolderFiles(handle) {
             continue;
         }
         entries.push(entry);
-      }
-      entries.forEach((v, i, a) => {
-       //playAudio(v);
-       loadAudioMeta(v);
-      });
+    }
+
+    var loadEntries = new Promise(async (resolve, reject) => {
+        const entryCount = entries.length;
+        progressbar.style.display = "block";
+        progressbarInner.style.width = "0%";
+        let i = 0;
+        for(const entry of entries) {
+        //playAudio(v);
+            await loadAudioMeta(entry);
+            i++
+            loading.innerText = "loading music files... (" + i + "/" + entryCount + ")";
+            progressbarInner.style.width = (i / entryCount * 100) + "%";
+
+        }
+        progressbar.style.display = "none";
+
+        resolve();
+    });
+    
+    loadEntries.then(() => {
+        loader.style.display = "none";
+    })
 }
 
 async function tagArtToDataURL(tags) {
@@ -191,47 +229,134 @@ async function tagArtToDataURL(tags) {
   return dataUrl;
 }
 
+function createAlbumElement(album) {
+    let albumEl = document.createElement("div");
+    albumEl.classList.add("album");
+
+    let albumTitle = document.createElement("div");
+    albumTitle.innerText = album;
+    albumTitle.classList.add("album-title");
+    albumEl.appendChild(albumTitle);
+
+    let albumContent = document.createElement("div");
+    albumContent.classList.add("album-content");
+    albumEl.appendChild(albumContent);
+
+    return albumEl;
+}
+
+function createArtistElement(artist) {
+    let artistEl = document.createElement("div");
+    artistEl.classList.add("artist");
+
+    let artistTitle = document.createElement("div");
+    artistTitle.innerText = artist;
+    artistTitle.classList.add("artist-title");
+    artistEl.appendChild(artistTitle);
+
+    let artistContent = document.createElement("div");
+    artistContent.classList.add("artist-content");
+    artistEl.appendChild(artistContent);
+
+    return artistEl;
+}
+
 async function createSongElement(handle, tags) {
+    console.log("++TAGS++", tags)
     let song = document.createElement("div");
-    song.classList.add("song");
 
     let url = "disk.png";
     if (Object.keys(tags).includes("picture")) {
         url = await tagArtToDataURL(tags);
     }
-    let image = document.createElement("img");
-    image.src = url;
-    song.appendChild(image);
+
+    if (Object.keys(tags).includes("album")) {
+        album = tags.album;
+    } else {
+        album = "Unknown Album";
+    }
+
+    if (!Object.keys(albumElements).includes(album)) {
+        albumElements[album] = createAlbumElement(album);
+        menuItems["albums"].appendChild(albumElements[album]);
+    }
+
+    if (Object.keys(tags).includes("artist")) {
+        artist = tags.artist;
+    } else {
+        artist = "Unknown artist";
+    }
+
+    if (!Object.keys(artistElements).includes(artist)) {
+        artistElements[artist] = createArtistElement(artist);
+        menuItems["artists"].appendChild(artistElements[artist]);
+    }
 
     let title = document.createElement("div");
     title.classList.add("song-title");
     song.appendChild(title)
     title.innerText = tags.title;
 
+    songAlbum = song.cloneNode(true)
+    songArtist = song.cloneNode(true)
+
     song.onclick = (event) => {
         playAudio(handle, url, tags)
     };
+
+    songAlbum.onclick = (event) => {
+        playAudio(handle, url, tags)
+    };
+
+    songArtist.onclick = (event) => {
+        playAudio(handle, url, tags)
+    };
+
+    songAlbum.classList.add("album-song")
+    songArtist.classList.add("artist-song")
+
+    song.classList.add("song");
+
+    albumElements[album].getElementsByClassName("album-content")[0].appendChild(songAlbum);
+    artistElements[artist].getElementsByClassName("artist-content")[0].appendChild(songArtist);
+
+
+    let image = document.createElement("img");
+    image.src = url;
+    song.insertBefore(image, title);
 
     return song;
 }
 
 async function loadAudioMeta(handle) {
-    jsmediatags.read(await handle.getFile(), {onSuccess: async function(tag) {
-        tags = tag.tags;
-        console.log(tags);
-        menuItems["songs"].appendChild(
-            await createSongElement(handle, tags)
-            );
-
-    },
-    onError: async function(error) {
+    return new Promise(async (resolve, reject) => {
+        jsmediatags.read(await handle.getFile(), {
         
-        menuItems["songs"].appendChild(
-            await createSongElement(handle, {
-                title: handle.name.split(".")[0]
-            })
-        );
-    }});
+            onSuccess: async function(tag) {
+                tags = tag.tags;
+                console.log(tags);
+                if (!Object.keys(tags).includes("title")) {
+                    tags.title = handle.name.split(".")[0];
+                }
+                menuItems["songs"].appendChild(
+                    await createSongElement(handle, tags)
+                    );
+                resolve();
+
+        },
+
+        onError: async function(error) {
+            
+            menuItems["songs"].appendChild(
+                await createSongElement(handle, {
+                    title: handle.name.split(".")[0]
+                })
+            );
+            resolve();
+        }
+    });
+
+    });
 }
 
 async function loadDirectoryHandle(handleRow) {
@@ -251,14 +376,21 @@ async function loadDirectoryHandle(handleRow) {
 }
 
 async function loadDirectory() {
-    directory = await window.showDirectoryPicker({
-        "id": "offbeat",
-        "mode": "read",
-        "startIn": "music"
-    });
+    loader.style.display = "flex";
+    loading.innerText = "waiting for you to choose a folder..."
+    try {
+        directory = await window.showDirectoryPicker({
+            "id": "offbeat",
+            "mode": "read",
+            "startIn": "music"
+        });
+    } catch (error) {
+        loader.style.display = "none";
+        return;
+    }
 
     db.directory.put({name: directory.name, handle: directory});
-    loadFolderFiles(directory);
+    await loadFolderFiles(directory);
 }
 
 setInterval(updateSeekBar, 500);
